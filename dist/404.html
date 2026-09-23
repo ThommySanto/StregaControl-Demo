@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StregaControl-Demo</title>
+    <script>
+        const path = window.location.pathname.slice(1)
+        const redirectPath = path ? `/?redirect=${encodeURIComponent('/' + path)}` : '/'
+        window.location.replace(redirectPath)
+    </script>
+</head>
+
+<body></body>
+
+</html>
