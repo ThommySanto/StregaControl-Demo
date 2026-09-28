@@ -2,8 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-// Config Vite: plugin React + alias "@/" -> "src/" per import puliti
-// tra i moduli (auth, map, elements, editions, ecc.)
 export default defineConfig({
   base: '/StregaControl-Demo/',
   plugins: [react()],
