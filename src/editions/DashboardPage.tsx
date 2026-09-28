@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '@/auth/AuthContext'
-import { supabase } from '@/db/supabaseClient'
+import { listRows } from '@/db/localDb'
 import type { Edition } from '@/types'
 import { useElements } from '@/elements/useElements'
 import { CATEGORY_DEFS } from '@/elements/catalog'
@@ -10,20 +9,15 @@ import { CATEGORY_DEFS } from '@/elements/catalog'
 // (§23) aggiornati automaticamente perche' derivano dallo stesso stato
 // caricato da useElements, e accesso rapido alla mappa.
 export default function DashboardPage() {
-  const { session, signOut } = useAuth()
   const [edition, setEdition] = useState<Edition | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-    supabase
-      .from('editions')
-      .select('*')
-      .order('year', { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
+    listRows<Edition>('editions').then((editions) => {
         if (cancelled) return
-        setEdition((data?.[0] as Edition) ?? null)
+        const latest = [...editions].sort((a, b) => b.year - a.year)[0]
+        setEdition(latest ?? null)
         setLoading(false)
       })
     return () => {
@@ -37,16 +31,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-2xl px-4 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Notte delle Streghe</h1>
-        <button
-          onClick={signOut}
-          className="text-sm text-gray-500 underline-offset-2 hover:underline"
-        >
-          Esci
-        </button>
       </div>
-      <p className="text-sm text-gray-600">
-        Accesso effettuato come <span className="font-medium">{session?.user.email}</span>.
-      </p>
 
       {loading ? (
         <p className="mt-4 text-sm text-gray-400">Caricamento…</p>

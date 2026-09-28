@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { supabase } from '@/db/supabaseClient'
+import { deleteRow, insertRow, listRows, updateRow } from '@/db/localDb'
 import type { Category, MapElement } from '@/types'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -42,19 +42,11 @@ export function useElements(editionId: string | null) {
     async function load() {
       setLoading(true)
       setLoadError(null)
-      const { data, error } = await supabase
-        .from('elements')
-        .select('*')
-        .eq('edition_id', editionId)
-        .order('created_at')
+      const data = (await listRows<MapElement>('elements', { edition_id: editionId }))
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
       if (cancelled) return
-      if (error) {
-        setLoadError('Impossibile caricare gli elementi. Controlla la connessione e riprova.')
-        setLoading(false)
-        return
-      }
-      setElements((data as MapElement[]) ?? [])
+      setElements(data)
       setLoading(false)
     }
 
@@ -68,13 +60,9 @@ export function useElements(editionId: string | null) {
     async (input: NewElementInput): Promise<MapElement | null> => {
       if (!editionId) return null
       setSaveStatus('saving')
-      const { data, error } = await supabase
-        .from('elements')
-        .insert({ edition_id: editionId, ...input })
-        .select()
-        .single()
+      const data = await insertRow('elements', { edition_id: editionId, ...input })
 
-      if (error || !data) {
+      if (!data) {
         setSaveStatus('error')
         return null
       }
@@ -94,9 +82,9 @@ export function useElements(editionId: string | null) {
       setElements((prev) => prev.map((el) => (el.id === id ? { ...el, ...patch } : el)))
       setSaveStatus('saving')
 
-      const { error } = await supabase.from('elements').update(patch).eq('id', id)
+      const updated = await updateRow('elements', id, patch)
 
-      if (error) {
+      if (!updated) {
         setElements(previous)
         setSaveStatus('error')
         return false
@@ -113,9 +101,9 @@ export function useElements(editionId: string | null) {
       setElements((prev) => prev.filter((el) => el.id !== id))
       setSaveStatus('saving')
 
-      const { error } = await supabase.from('elements').delete().eq('id', id)
+      const deleted = await deleteRow('elements', id)
 
-      if (error) {
+      if (!deleted) {
         setElements(previous)
         setSaveStatus('error')
         return false
