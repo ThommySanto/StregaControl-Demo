@@ -10,6 +10,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    sourcemap: true, // <-- Questo ti mostra i file originali nella console
+  },
   server: {
     port: 5173,
   },
